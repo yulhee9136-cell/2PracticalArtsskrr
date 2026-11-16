@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>분리배출 마스터</title>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+:root{--green:#3f9d6b;--green-l:#e3f4ea;--blue:#4a8fc9;--blue-l:#e2eff9;--purple:#8a6cc4;--purple-l:#efe9fa;--orange:#f08a3c;--red:#e25b5b;--ink:#2d3a33;--bg:#f6faf4}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Gowun Dodum',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;user-select:none}
+h1,h2,h3,button,.jua{font-family:'Jua',sans-serif;font-weight:400}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:#fff;border-bottom:4px solid var(--green-l)}
+header h1{font-size:clamp(24px,2.6vw,38px);color:var(--green);cursor:pointer}
+.score{font-family:'Jua';font-size:clamp(20px,2vw,30px);background:var(--green-l);padding:6px 20px;border-radius:999px}
+main{max-width:1400px;margin:0 auto;padding:24px}
+.screen{display:none}.screen.on{display:block}
+button{cursor:pointer;border:none;border-radius:20px;transition:transform .1s}
+button:active{transform:scale(.96)}
+/* 메뉴 */
+.menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px;margin-top:10px}
+.menu button{padding:34px 18px;font-size:clamp(24px,2.2vw,34px);color:#fff;box-shadow:0 6px 0 rgba(0,0,0,.15);line-height:1.3}
+.menu button span{display:block;font-size:clamp(50px,5vw,72px);margin-bottom:8px}
+.menu button small{display:block;font-family:'Gowun Dodum';font-size:clamp(15px,1.3vw,19px);opacity:.95;margin-top:6px}
+.intro{text-align:center;font-size:clamp(20px,1.8vw,28px);margin:6px 0 22px}
+.back{background:#fff;border:3px solid #cfdcd3;font-size:20px;padding:8px 20px;margin-bottom:16px}
+/* 개념 */
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.tabs button{font-size:clamp(18px,1.6vw,24px);padding:10px 22px;background:#fff;border:3px solid #cfdcd3}
+.tabs button.on{background:var(--green);color:#fff;border-color:var(--green)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+.card{background:#fff;border-radius:22px;padding:22px;border:4px solid var(--green-l);cursor:pointer;min-height:200px;position:relative}
+.card .ic{font-size:56px}
+.card h3{font-size:clamp(26px,2.2vw,34px);margin:6px 0}
+.card .hide{font-size:clamp(18px,1.5vw,23px);line-height:1.55}
+.card.closed .hide{filter:blur(9px);opacity:.5}
+.card.closed::after{content:'눌러서 확인 👆';position:absolute;right:16px;bottom:12px;font-family:'Jua';color:var(--green);font-size:18px}
+.card b{color:var(--orange)}
+/* 퀴즈 공통 */
+.qbox{background:#fff;border-radius:28px;padding:30px;text-align:center;box-shadow:0 6px 0 #dce8df}
+.qnum{font-family:'Jua';color:#8aa596;font-size:22px}
+.item{font-size:clamp(90px,10vw,140px);line-height:1.1;margin:10px 0}
+.qtext{font-size:clamp(28px,3vw,44px);font-family:'Jua';margin:8px 0 20px;line-height:1.35}
+.hint{font-size:clamp(17px,1.5vw,22px);color:#6b7d72;margin-top:-10px;margin-bottom:18px}
+.choices{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.choices button{font-size:clamp(20px,1.9vw,28px);padding:20px 10px;background:var(--green-l);color:var(--ink);border:4px solid transparent;line-height:1.3}
+.choices button .e{display:block;font-size:clamp(34px,3vw,46px)}
+.choices button.ok{background:#c9f0d6;border-color:var(--green)}
+.choices button.no{background:#fbdcdc;border-color:var(--red)}
+.feedback{min-height:90px;margin-top:20px;font-size:clamp(20px,1.9vw,28px);line-height:1.5;padding:14px;border-radius:18px;display:none}
+.feedback.ok{display:block;background:#e7f8ec;color:#226b43}
+.feedback.no{display:block;background:#fdeceb;color:#a33c3c}
+.next{margin-top:18px;font-size:clamp(22px,2vw,30px);padding:14px 44px;background:var(--orange);color:#fff;display:none;box-shadow:0 5px 0 #c86a25}
+.ox{grid-template-columns:1fr 1fr}
+.ox button{font-size:clamp(70px,8vw,120px);padding:10px}
+/* 순서 */
+.slots{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:16px 0}
+.slot{width:clamp(150px,17vw,230px);min-height:150px;border:4px dashed #b9cfc0;border-radius:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;background:#fafdfb;padding:8px}
+.slot .n{font-family:'Jua';color:#8aa596;font-size:22px}
+.slot.fill{border-style:solid;border-color:var(--green);background:var(--green-l)}
+.slot .e{font-size:48px}.slot .t{font-family:'Jua';font-size:26px}.slot .d{font-size:16px;text-align:center}
+.pool{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.pool button{width:clamp(150px,17vw,230px);padding:16px 8px;background:#fff;border:4px solid #cfdcd3;font-size:26px}
+.pool button .e{display:block;font-size:46px}
+.pool button:disabled{opacity:.25}
+.result{text-align:center;padding:40px}
+.result .big{font-size:clamp(80px,9vw,130px)}
+.result h2{font-size:clamp(34px,3.5vw,52px);margin:10px 0}
+.result p{font-size:clamp(22px,2vw,30px)}
+.result button{margin:24px 8px 0;font-size:26px;padding:14px 34px;color:#fff;background:var(--green)}
+@keyframes pop{0%{transform:scale(.6)}70%{transform:scale(1.1)}100%{transform:scale(1)}}
+.pop{animation:pop .35s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.shake{animation:shake .3s}
+.score{display:flex;gap:10px;background:none;padding:0}
+.score .pill{background:var(--green-l);padding:6px 18px;border-radius:999px}
+.score .pill.bad{background:#fdeceb;color:#a33c3c}
+.home{display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start}
+@media(max-width:900px){.home{grid-template-columns:1fr}}
+.menu button.locked{background:#c9d1cc!important;color:#7d8a82;box-shadow:none;cursor:not-allowed}
+.menu button .badge{position:absolute;top:10px;right:14px;font-size:30px}
+.menu button{position:relative}
+.qrpanel{background:#fff;border-radius:24px;padding:20px;text-align:center;box-shadow:0 6px 0 #dce8df}
+.qrpanel h3{font-size:24px;color:var(--green);margin-bottom:10px}
+.qrpanel #qr{display:flex;justify-content:center;cursor:pointer}
+.qrpanel p{font-size:16px;color:#6b7d72;margin-top:10px}
+.reset{margin-top:16px;background:#fff;border:3px solid #e9c7c7;color:#a33c3c;font-size:18px;padding:8px 16px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:10}
+.modal.on{display:flex}
+.modal div{background:#fff;padding:30px;border-radius:28px;text-align:center}
+.modal p{font-family:'Jua';font-size:30px;margin-top:14px}
+.learnbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px;font-family:'Jua';font-size:22px}
+.tabs button.done::after{content:' ✅'}
+.passbtn{font-size:24px;padding:12px 30px;background:var(--orange);color:#fff;box-shadow:0 5px 0 #c86a25}
+.passbtn:disabled{background:#c9d1cc;box-shadow:none;cursor:not-allowed}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+<header>
+  <h1 onclick="go('menu')">♻️ 분리배출 마스터</h1>
+  <div class="score"><span class="pill">⭕ 맞힘 <span id="okc">0</span></span><span class="pill bad">❌ 틀림 <span id="noc">0</span></span></div>
+</header>
+<main>
+
+<!-- 메뉴 -->
+<section id="menu" class="screen on">
+  <p class="intro">환경을 고려하며 생활 자원을 관리해 보아요 (실과 92~93쪽)</p>
+  <div class="home">
+    <div class="menu" id="menuGrid"></div>
+    <div class="qrpanel">
+      <h3>📱 QR로 들어오기</h3>
+      <div id="qr" onclick="openQR()"></div>
+      <p>누르면 크게 보여요</p>
+      <button class="reset" id="resetBtn" onclick="resetAll()">🔄 처음부터 다시</button>
+    </div>
+  </div>
+</section>
+
+<!-- 개념 카드 -->
+<section id="learn" class="screen">
+  <button class="back" onclick="go('menu')">◀ 처음으로</button>
+  <div class="learnbar"><span id="learnProg"></span><button class="passbtn" id="learnPass" onclick="passStage(0);goNextStage()">다 봤어요! 다음 단계 열기 ▶</button></div>
+  <div class="tabs" id="tabs"></div>
+  <div class="cards" id="cards"></div>
+</section>
+
+<!-- 퀴즈 -->
+<section id="quiz" class="screen">
+  <button class="back" onclick="go('menu')">◀ 처음으로</button>
+  <div class="qbox" id="qbox">
+    <div class="qnum" id="qnum"></div>
+    <div class="item" id="qitem"></div>
+    <div class="qtext" id="qtext"></div>
+    <div class="hint" id="qhint"></div>
+    <div class="choices" id="choices"></div>
+    <div class="feedback" id="fb"></div>
+    <button class="next" id="next" onclick="nextQ()">다음 ▶</button>
+  </div>
+</section>
+
+<!-- 순서 -->
+<section id="order" class="screen">
+  <button class="back" onclick="go('menu')">◀ 처음으로</button>
+  <div class="qbox">
+    <div class="qtext">분리배출 기본 규칙! 순서대로 눌러 보세요</div>
+    <div class="slots" id="slots"></div>
+    <div class="pool" id="pool"></div>
+    <div class="feedback" id="ofb"></div>
+    <button class="next" id="onext" onclick="passStage(2);goNextStage()">다음 단계로 ▶</button>
+  </div>
+</section>
+
+<!-- 결과 -->
+<section id="result" class="screen">
+  <div class="qbox result">
+    <div class="big" id="rbig"></div>
+    <h2 id="rtitle"></h2>
+    <p id="rtext"></p>
+    <button id="rnext" style="background:var(--orange)" onclick="goNextStage()">다음 단계로 ▶</button>
+    <button onclick="startQuiz(mode)">다시 하기 🔄</button>
+    <button style="background:var(--blue)" onclick="go('menu')">처음으로 🏠</button>
+  </div>
+</section>
+
+</main>
+<div class="modal" id="modal" onclick="this.classList.remove('on')"><div><div id="qrBig"></div><p>휴대폰 카메라로 찍어 보세요</p></div></div>
+<script>
+const APP_URL='https://claude.ai/artifact/9ktkzQVcbJ5aFvzRnSHZ9z';
+const KEY='eco-master-v1';
+let st={passed:0,ok:0,no:0,seen:{}};
+try{const v=JSON.parse(localStorage.getItem(KEY));if(v)st=Object.assign(st,v)}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}}
+function bump(id){const el=document.getElementById(id).parentElement;el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop')}
+function count(good){good?st.ok++:st.no++;save();renderCount();bump(good?'okc':'noc')}
+function renderCount(){document.getElementById('okc').textContent=st.ok;document.getElementById('noc').textContent=st.no}
+function addStar(){}
+const STAGES=[
+ {e:'📖',t:'개념 카드',d:'카드를 모두 열어 봐요',c:'var(--green)',go:()=>go('learn')},
+ {e:'💡',t:'절약·재사용·재활용',d:'어떤 방법일까요?',c:'var(--blue)',go:()=>startQuiz('way')},
+ {e:'🔢',t:'기본 규칙 순서',d:'4단계를 순서대로!',c:'var(--purple)',go:()=>startOrder()},
+ {e:'🗑️',t:'어디에 버릴까?',d:'분리배출 게임',c:'var(--orange)',go:()=>startQuiz('sort')},
+ {e:'⭕',t:'OX 퀴즈',d:'맞을까, 틀릴까?',c:'#d86b8f',go:()=>startQuiz('ox')}];
+const MODE_STAGE={way:1,sort:3,ox:4};
+function renderMenu(){
+ document.getElementById('menuGrid').innerHTML=STAGES.map((g,i)=>{
+  const locked=i>st.passed,done=i<st.passed;
+  return `<button class="${locked?'locked':''}" style="background:${g.c}" onclick="openStage(${i})">${done?'<span class="badge">✅</span>':locked?'<span class="badge">🔒</span>':''}<span>${g.e}</span>${i+1}단계 · ${g.t}<small>${locked?'앞 단계를 통과하면 열려요':done?'통과! 다시 해도 좋아요':g.d}</small></button>`}).join('');
+}
+function openStage(i){if(i>st.passed)return;STAGES[i].go()}
+function passStage(i){if(st.passed<=i){st.passed=i+1;save()}renderMenu()}
+let curStage=0;
+function goNextStage(){const n=curStage+1;if(n<STAGES.length)STAGES[n].go();else go('menu')}
+let resetArm=false;
+function resetAll(){const b=document.getElementById('resetBtn');
+ if(!resetArm){resetArm=true;b.textContent='한 번 더 누르면 초기화돼요';setTimeout(()=>{resetArm=false;b.textContent='🔄 처음부터 다시'},3000);return}
+ st={passed:0,ok:0,no:0,seen:{}};save();resetArm=false;b.textContent='🔄 처음부터 다시';renderCount();renderMenu()}
+function openQR(){const box=document.getElementById('qrBig');box.innerHTML='';
+ try{new QRCode(box,{text:APP_URL,width:Math.min(520,window.innerHeight-200),height:Math.min(520,window.innerHeight-200)})}catch(e){box.textContent=APP_URL}
+ document.getElementById('modal').classList.add('on')}
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));window.scrollTo(0,0);if(id==='learn'){curStage=0;renderLearn()}if(id==='menu')renderMenu()}
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+/* ---------- 개념 카드 ---------- */
+const LEARN={
+ '생활 자원 관리 방법':[
+  {ic:'💰',t:'절약',d:'생활 자원의 <b>소비량</b>을 전체적으로 <b>줄입니다</b>.<br>예) 집에 이미 있으면 또 사지 않기, 비닐봉지 사용 줄이기'},
+  {ic:'👕',t:'재사용',d:'사용한 물건을 <b>다시 사용</b>하거나 <b>다른 용도</b>로 사용합니다.<br>예) 옷 수선해서 다시 입기, 작아진 옷 기부하기'},
+  {ic:'♻️',t:'재활용',d:'쓰레기를 원래의 물건, 또는 다른 물건의 <b>원료나 재료</b>로 활용합니다.<br>재활용의 첫걸음은 <b>분리배출</b>!'},
+  {ic:'👜',t:'업사이클링',d:'폐기물의 <b>가치를 높여</b> 재활용하는 것<br>예) 현수막으로 만든 가방'}],
+ '낱말 뜻':[
+  {ic:'🚮',t:'폐기물',d:'<b>못 쓰게 되어 버리는</b> 물건'},
+  {ic:'🌏',t:'지속가능한 생활',d:'<b>환경</b>과 <b>미래 세대</b>를 고려하여 자원을 사용하는 생활'},
+  {ic:'🌱',t:'왜 중요할까?',d:'자원을 <b>절약</b>하고 <b>폐기물을 줄여</b> 줘요. 분리배출을 하면 재활용률이 높아져 <b>쓰레기 처리 비용</b>도 줄어요.'}],
+ '분리배출 기본 규칙':[
+  {ic:'💧',t:'① 버리기',d:'안에 든 <b>내용물을 비워요</b>.'},
+  {ic:'🚰',t:'② 헹구기',d:'물로 깨끗이 <b>헹궈요</b>.'},
+  {ic:'🏷️',t:'③ 제거하기',d:'<b>상표, 뚜껑</b> 등 재질이 다른 것을 <b>떼어 내요</b>.'},
+  {ic:'🗂️',t:'④ 구분하기',d:'유리, 종이, 페트 등 <b>종류별로 나눠</b> 버려요.'}],
+ '재활용품':[
+  {ic:'🧴',t:'플라스틱 / 비닐류',d:'부착된 <b>상표</b>나 재질이 다른 <b>뚜껑</b> 등을 제거한 후 배출합니다.'},
+  {ic:'📦',t:'종이류',d:'<b>스프링, 테이프</b> 등 종이가 아닌 것은 제거하고, <b>반듯하게 펴서 쌓은 후</b> 끈으로 묶어 배출합니다.'},
+  {ic:'🍾',t:'병류',d:'유리병이 <b>깨지지 않도록</b> 주의하며 상표나 뚜껑 등을 제거한 후 배출합니다.'},
+  {ic:'🥫',t:'캔류',d:'상표, 뚜껑 등을 제거하고 <b>납작하게 눌러</b> 배출합니다. 부탄가스·살충제 용기는 환기가 잘 되는 곳에서 <b>구멍을 뚫어</b> 배출해요. (꼭 <b>어른의 도움</b>을 받아요!)'}],
+ '그 밖의 쓰레기':[
+  {ic:'🍎',t:'음식물 쓰레기',d:'이물질을 제거하고 <b>물기를 짠 후</b> 배출합니다.<br><b>동물 뼈, 딱딱한 껍데기, 씨앗</b>은 일반 쓰레기!'},
+  {ic:'🛍️',t:'일반 쓰레기',d:'재활용이 어려운 쓰레기는 <b>종량제 봉투</b>에 담아 지정된 장소와 시간에 배출합니다.'},
+  {ic:'🔋',t:'그 외의 쓰레기',d:'폐형광등, 폐건전지, 남은 의약품은 <b>전용 수거함</b>에!<br>대형 폐기물은 <b>전용 배출 스티커</b>를 붙여 배출합니다.'},
+  {ic:'📍',t:'우리 지역은?',d:'분리배출 방법은 <b>지역마다 조금씩 달라요</b>. 우리 지역의 방법도 찾아봐요!'}]
+};
+let curTab=Object.keys(LEARN)[0];
+const TOTAL_CARDS=Object.values(LEARN).reduce((a,v)=>a+v.length,0);
+function seenCount(){return Object.keys(st.seen).length}
+function renderLearn(){
+ document.getElementById('tabs').innerHTML=Object.keys(LEARN).map(k=>{const all=LEARN[k].every((c,i)=>st.seen[k+i]);return `<button class="${k===curTab?'on':''} ${all?'done':''}" onclick="curTab='${k}';renderLearn()">${k}</button>`}).join('');
+ document.getElementById('cards').innerHTML=LEARN[curTab].map((c,i)=>`<div class="card closed" onclick="flip(this,'${curTab}${i}')"><div class="ic">${c.ic}</div><h3>${c.t}</h3><div class="hide">${c.d}</div></div>`).join('');
+ updLearn();
+}
+function flip(el,id){el.classList.toggle('closed');if(!st.seen[id]){st.seen[id]=1;save();renderTabsOnly()}updLearn()}
+function renderTabsOnly(){document.querySelectorAll('#tabs button').forEach(b=>{const k=b.textContent;b.classList.toggle('done',LEARN[k].every((c,i)=>st.seen[k+i]))})}
+function updLearn(){const n=seenCount();document.getElementById('learnProg').textContent=`열어 본 카드 ${n} / ${TOTAL_CARDS}`;
+ const b=document.getElementById('learnPass');b.disabled=n<TOTAL_CARDS&&st.passed<1;b.textContent=st.passed>=1?'2단계로 가기 ▶':n<TOTAL_CARDS?'카드를 모두 열면 다음 단계가 열려요':'다 봤어요! 다음 단계 열기 ▶'}
+
+/* ---------- 퀴즈 데이터 ---------- */
+const BINS={
+ plastic:{e:'🧴',t:'플라스틱·비닐'},paper:{e:'📦',t:'종이류'},glass:{e:'🍾',t:'병류'},can:{e:'🥫',t:'캔류'},
+ food:{e:'🍎',t:'음식물'},general:{e:'🛍️',t:'일반 쓰레기<br>(종량제 봉투)'},special:{e:'🔋',t:'전용 수거함<br>· 스티커'}
+};
+const SORT=[
+ {i:'🧃',n:'다 마신 페트병',a:'plastic',x:'내용물을 비우고 헹군 뒤, 상표와 뚜껑을 떼고 플라스틱으로!'},
+ {i:'🍿',n:'과자 봉지',a:'plastic',x:'과자 봉지는 비닐류예요. 부스러기를 털고 버려요.'},
+ {i:'📰',n:'신문지',a:'paper',x:'반듯하게 펴서 쌓은 후 끈으로 묶어 종이류로!'},
+ {i:'📦',n:'택배 상자',a:'paper',x:'테이프와 송장을 떼고 펴서 종이류로!'},
+ {i:'📓',n:'스프링 공책',a:'paper',x:'스프링은 종이가 아니니 빼고, 종이만 종이류로!'},
+ {i:'🍾',n:'유리 음료병',a:'glass',x:'깨지지 않게 조심! 뚜껑과 상표를 떼고 병류로!'},
+ {i:'🥤',n:'음료 캔',a:'can',x:'내용물을 비우고 납작하게 눌러 캔류로!'},
+ {i:'🧯',n:'다 쓴 부탄가스',a:'can',x:'캔류예요. 구멍을 뚫을 때는 꼭 어른의 도움을 받아요!'},
+ {i:'🍌',n:'바나나 껍질',a:'food',x:'물기를 빼고 음식물 쓰레기로!'},
+ {i:'🍚',n:'남은 밥',a:'food',x:'이물질을 빼고 물기를 짜서 음식물 쓰레기로!'},
+ {i:'🍗',n:'치킨 뼈',a:'general',x:'동물 뼈는 음식물이 아니라 일반 쓰레기예요!'},
+ {i:'🍑',n:'복숭아 씨',a:'general',x:'딱딱한 씨앗은 일반 쓰레기예요!'},
+ {i:'🐚',n:'조개 껍데기',a:'general',x:'딱딱한 껍데기는 일반 쓰레기예요!'},
+ {i:'🧻',n:'코 푼 휴지',a:'general',x:'더러워진 휴지는 재활용이 어려워 일반 쓰레기!'},
+ {i:'🔋',n:'다 쓴 건전지',a:'special',x:'폐건전지는 전용 수거함에!'},
+ {i:'💡',n:'고장 난 형광등',a:'special',x:'폐형광등은 전용 수거함에!'},
+ {i:'💊',n:'남은 감기약',a:'special',x:'남은 의약품은 전용 수거함(폐의약품 수거함)에!'},
+ {i:'🛋️',n:'낡은 소파',a:'special',x:'대형 폐기물은 전용 배출 스티커를 붙여서 버려요!'}
+];
+const WAYS={save:{e:'💰',t:'절약'},reuse:{e:'👕',t:'재사용'},recycle:{e:'♻️',t:'재활용'}};
+const WAY=[
+ {i:'🛍️',n:'장 볼 때 장바구니를 들고 가서 비닐봉지를 받지 않아요.',a:'save',x:'비닐봉지 사용을 줄이는 것은 절약!'},
+ {i:'✏️',n:'집에 색연필이 있어서 새로 사지 않았어요.',a:'save',x:'이미 있는 물건을 또 사지 않는 것은 절약!'},
+ {i:'🚿',n:'양치할 때 컵을 써서 물을 아껴요.',a:'save',x:'자원의 소비량을 줄이는 것은 절약!'},
+ {i:'👕',n:'작아진 옷을 동생에게 물려주거나 기부해요.',a:'reuse',x:'사용한 물건을 다시 사용하는 것은 재사용!'},
+ {i:'🧵',n:'구멍 난 옷을 수선해서 다시 입어요.',a:'reuse',x:'고쳐서 다시 쓰는 것은 재사용!'},
+ {i:'🫙',n:'다 먹은 잼 병을 씻어서 연필꽂이로 써요.',a:'reuse',x:'다른 용도로 다시 쓰는 것도 재사용!'},
+ {i:'🧴',n:'페트병을 헹구고 상표를 떼어 분리배출해요.',a:'recycle',x:'원료로 다시 쓰이도록 분리배출하는 것은 재활용!'},
+ {i:'📰',n:'신문지를 모아 끈으로 묶어 종이류로 내놓아요.',a:'recycle',x:'재활용의 첫걸음은 분리배출!'},
+ {i:'👜',n:'버려진 현수막으로 만든 가방을 사용해요.',a:'recycle',x:'폐기물의 가치를 높인 업사이클링, 재활용의 한 방법이에요!'}
+];
+const OX=[
+ {i:'🍗',n:'치킨 뼈는 음식물 쓰레기로 버린다.',a:'X',x:'동물 뼈는 일반 쓰레기예요.'},
+ {i:'🧴',n:'페트병은 상표를 떼고 버린다.',a:'O',x:'재질이 다른 상표와 뚜껑은 떼고 버려요.'},
+ {i:'📦',n:'택배 상자는 테이프를 붙인 채로 버려도 된다.',a:'X',x:'테이프처럼 종이가 아닌 것은 떼고 버려요.'},
+ {i:'🥫',n:'캔은 납작하게 눌러서 버린다.',a:'O',x:'납작하게 누르면 부피가 줄어요.'},
+ {i:'🔋',n:'다 쓴 건전지는 일반 쓰레기 봉투에 버린다.',a:'X',x:'폐건전지는 전용 수거함에 버려요.'},
+ {i:'🍎',n:'음식물 쓰레기는 물기를 짠 후 버린다.',a:'O',x:'이물질을 빼고 물기를 짜서 버려요.'},
+ {i:'🧯',n:'부탄가스에 구멍 뚫기는 혼자 해도 된다.',a:'X',x:'위험하니까 꼭 어른의 도움을 받아요.'},
+ {i:'📍',n:'분리배출 방법은 지역마다 조금씩 다르다.',a:'O',x:'우리 지역의 분리배출 방법을 찾아봐요.'},
+ {i:'🌏',n:'지속가능한 생활은 지금의 나만 생각하는 생활이다.',a:'X',x:'환경과 미래 세대를 고려하여 자원을 사용하는 생활이에요.'},
+ {i:'💰',n:'분리배출을 잘하면 쓰레기 처리 비용이 줄어든다.',a:'O',x:'재활용률이 높아져 처리 비용도 줄어요.'}
+];
+
+/* ---------- 퀴즈 엔진 ---------- */
+let mode,qs,qi,right,answered,missed;
+function startQuiz(m){
+ mode=m;curStage=MODE_STAGE[m];qi=0;right=0;
+ qs=m==='sort'?shuffle(SORT).slice(0,10):m==='way'?shuffle(WAY):shuffle(OX).slice(0,8);
+ go('quiz');showQ();
+}
+function showQ(){
+ answered=false;missed=false;const q=qs[qi];
+ document.getElementById('qnum').textContent=`${qi+1} / ${qs.length}`;
+ const it=document.getElementById('qitem');it.textContent=q.i;it.classList.remove('pop');void it.offsetWidth;it.classList.add('pop');
+ const fb=document.getElementById('fb');fb.className='feedback';fb.innerHTML='';
+ document.getElementById('next').style.display='none';
+ const ch=document.getElementById('choices');ch.className='choices';
+ let opts;
+ if(mode==='sort'){document.getElementById('qtext').textContent=`'${q.n}'은(는) 어디에 버릴까요?`;document.getElementById('qhint').textContent='';opts=BINS;}
+ else if(mode==='way'){document.getElementById('qtext').textContent=q.n;document.getElementById('qhint').textContent='어떤 생활 자원 관리 방법일까요?';opts=WAYS;}
+ else{document.getElementById('qtext').textContent=q.n;document.getElementById('qhint').textContent='';ch.classList.add('ox');
+  ch.innerHTML=['O','X'].map(o=>`<button data-k="${o}" onclick="pick(this)" style="color:${o==='O'?'#3f9d6b':'#e25b5b'}">${o==='O'?'⭕':'❌'}</button>`).join('');return;}
+ ch.innerHTML=Object.entries(opts).map(([k,v])=>`<button data-k="${k}" onclick="pick(this)"><span class="e">${v.e}</span>${v.t}</button>`).join('');
+}
+function pick(btn){
+ if(answered)return;const q=qs[qi];const k=btn.dataset.k;const fb=document.getElementById('fb');
+ if(k===q.a){
+  answered=true;count(true);if(!missed){right++;}btn.classList.add('ok','pop');
+  fb.className='feedback ok';fb.innerHTML='🎉 정답! '+q.x;
+  document.getElementById('next').style.display='inline-block';
+ }else{
+  count(false);missed=true;btn.classList.add('no','shake');btn.disabled=true;
+  fb.className='feedback no';fb.innerHTML='🤔 다시 생각해 볼까요? 한 번 더!';
+ }
+}
+function nextQ(){qi++;if(qi<qs.length)showQ();else showResult()}
+function showResult(){
+ passStage(curStage);const r=right/qs.length;
+ const nb=document.getElementById('rnext');nb.style.display=curStage<STAGES.length-1?'inline-block':'none';
+ nb.textContent=`${curStage+2}단계 열림! 가기 ▶`;
+ document.getElementById('rbig').textContent=r===1?'🏆':r>=.7?'🌟':'🌱';
+ document.getElementById('rtitle').textContent=curStage===4?'🎊 모든 단계 통과! 분리배출 마스터!':`${curStage+1}단계 통과!`;
+ document.getElementById('rtext').textContent=`${qs.length}문제 중 ${right}문제를 한 번에 맞혔어요.`+(r<.7?' 다시 해 보면 더 잘할 수 있어요!':'');
+ go('result');
+}
+
+/* ---------- 순서 맞추기 ---------- */
+const STEPS=[{e:'💧',t:'버리기',d:'내용물 비우기'},{e:'🚰',t:'헹구기',d:'물로 헹구기'},{e:'🏷️',t:'제거하기',d:'상표·뚜껑 떼기'},{e:'🗂️',t:'구분하기',d:'종류별로 나누기'}];
+let ostep;
+function startOrder(){
+ ostep=0;curStage=2;go('order');
+ document.getElementById('slots').innerHTML=STEPS.map((s,i)=>`<div class="slot" id="slot${i}"><span class="n">${i+1}단계</span></div>`).join('');
+ let order;do{order=shuffle([0,1,2,3])}while(order.join()==='0,1,2,3');
+ document.getElementById('pool').innerHTML=order.map(i=>`<button data-i="${i}" onclick="pickStep(this)"><span class="e">${STEPS[i].e}</span>${STEPS[i].t}</button>`).join('');
+ document.getElementById('ofb').className='feedback';document.getElementById('onext').style.display='none';
+}
+function pickStep(btn){
+ const i=+btn.dataset.i,fb=document.getElementById('ofb');
+ if(i===ostep){
+  const s=STEPS[i],sl=document.getElementById('slot'+i);
+  sl.className='slot fill pop';sl.innerHTML=`<span class="n">${i+1}단계</span><span class="e">${s.e}</span><span class="t">${s.t}</span><span class="d">${s.d}</span>`;
+  count(true);btn.disabled=true;ostep++;fb.className='feedback';
+  if(ostep===4){passStage(2);document.getElementById('onext').textContent='4단계 열림! 가기 ▶';fb.className='feedback ok';fb.innerHTML='🎉 완벽해요! 버리기 → 헹구기 → 제거하기 → 구분하기';document.getElementById('onext').style.display='inline-block'}
+ }else{
+  count(false);btn.classList.remove('shake');void btn.offsetWidth;btn.classList.add('shake');
+  fb.className='feedback no';fb.innerHTML=`🤔 ${ostep+1}단계가 아니에요. 다시 골라 볼까요?`;
+ }
+}
+renderCount();renderMenu();
+try{new QRCode(document.getElementById('qr'),{text:APP_URL,width:220,height:220})}catch(e){document.getElementById('qr').textContent=APP_URL}
+</script>
+</body>
+</html>
