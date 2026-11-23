@@ -323,7 +323,7 @@ function showFinal(justDone){
 
 /* ---------- QR ---------- */
 const APP_URL='';   // 비워 두면 지금 열린 주소(깃허브 주소)로 QR을 만들어요
-const qrUrl=()=>APP_URL||location.href.split('#')[0];
+const qrUrl=()=>APP_URL||(/claude/.test(location.hostname)?'https://claude.ai/artifact/9ktkzQVcbJ5aFvzRnSHZ9z':location.href.split('#')[0]);
 function openQR(){const box=$('qrBig');box.innerHTML='';const s=Math.min(520,window.innerHeight-200);
   try{new QRCode(box,{text:qrUrl(),width:s,height:s})}catch(e){box.textContent=qrUrl()}
   $('modal').classList.add('on')}
